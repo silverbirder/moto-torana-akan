@@ -99,7 +99,7 @@ export default function Component() {
             animate={{ rotate: [0, 10, -10, 0] }}
             transition={{ repeat: Infinity, duration: 2 }}
           >
-            {calculatedEmoji || thinkingEmoji}
+            {calculatedEmoji ?? thinkingEmoji}
           </motion.div>
           <div className="space-y-2">
             <Label htmlFor="price" className="flex items-center">
