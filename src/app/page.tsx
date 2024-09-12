@@ -19,33 +19,135 @@ import {
   UsersIcon,
   ClockIcon,
 } from "lucide-react";
-import { usePagePresenter } from "./page.presenter";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ErrorMessage } from "@hookform/error-message";
+import { useCallback, useEffect, useState } from "react";
+
+const formSchema = z.object({
+  price: z
+    .string()
+    .min(1, "価格を入力してください")
+    .refine((val) => !isNaN(Number(val)), "価格は数値である必要があります"),
+  periodValue: z
+    .string()
+    .min(1, "期間を入力してください")
+    .refine((val) => !isNaN(Number(val)), "期間は数値である必要があります"),
+  frequencyValue: z
+    .string()
+    .min(1, "頻度を入力してください")
+    .refine((val) => !isNaN(Number(val)), "頻度は数値である必要があります"),
+  users: z
+    .string()
+    .min(1, "人数を入力してください")
+    .refine((val) => !isNaN(Number(val)), "人数は数値である必要があります"),
+  hoursPerDay: z
+    .string()
+    .min(1, "時間を入力してください")
+    .refine((val) => !isNaN(Number(val)), "時間は数値である必要があります"),
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 export default function Page() {
+  const [isDetailMode, setIsDetailMode] = useState(false);
+  const [periodUnit, setPeriodUnit] = useState("months");
+  const [frequencyUnit, setFrequencyUnit] = useState("week");
+  const [thinkingEmoji, setThinkingEmoji] = useState("🤔");
+  const [calculatedEmoji, setCalculatedEmoji] = useState<string | null>(null);
+  const [result, setResult] = useState<number | null>(null);
+  const [totalHours, setTotalHours] = useState<string | null>(null);
+  const [costPerDay, setCostPerDay] = useState<string | null>(null);
+
   const {
-    price,
-    setPrice,
-    periodUnit,
-    setPeriodUnit,
-    periodValue,
-    setPeriodValue,
-    frequencyUnit,
-    setFrequencyUnit,
-    frequencyValue,
-    setFrequencyValue,
-    hoursPerDay,
-    setHoursPerDay,
-    users,
-    setUsers,
-    result,
-    thinkingEmoji,
-    calculatedEmoji,
-    isDetailMode,
-    setIsDetailMode,
-    calculateCost,
-    totalHours,
-    costPerDay,
-  } = usePagePresenter();
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isValid },
+  } = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    mode: "onChange",
+    defaultValues: {
+      hoursPerDay: "1",
+    },
+  });
+
+  const price = watch("price");
+  const periodValue = watch("periodValue");
+  const frequencyValue = watch("frequencyValue");
+  const users = watch("users", "1");
+  const hoursPerDay = watch("hoursPerDay", "1");
+
+  const getPeriodInDays = useCallback(() => {
+    const value = parseFloat(periodValue);
+    switch (periodUnit) {
+      case "years":
+        return value * 365;
+      case "months":
+        return value * 30;
+      case "weeks":
+        return value * 7;
+      default:
+        return value;
+    }
+  }, [periodValue, periodUnit]);
+
+  const getTotalUses = useCallback(
+    (totalDays: number) => {
+      const value = parseFloat(frequencyValue);
+      switch (frequencyUnit) {
+        case "month":
+          return (totalDays / 30) * value;
+        case "week":
+          return (totalDays / 7) * value;
+        default:
+          return totalDays * value;
+      }
+    },
+    [frequencyValue, frequencyUnit],
+  );
+
+  const calculateCost = () => {
+    const totalDays = getPeriodInDays();
+    const totalUses = getTotalUses(totalDays);
+    const totalHoursValue = (totalUses * parseFloat(hoursPerDay)).toFixed(1);
+
+    const costPerHour =
+      parseInt(price) / (parseFloat(totalHoursValue) * parseFloat(users));
+
+    setResult(costPerHour);
+
+    if (!isNaN(costPerHour)) {
+      if (costPerHour > 1000) setCalculatedEmoji("😱");
+      else if (costPerHour > 500) setCalculatedEmoji("😰");
+      else if (costPerHour > 100) setCalculatedEmoji("🤨");
+      else if (costPerHour > 50) setCalculatedEmoji("🙂");
+      else if (costPerHour > 10) setCalculatedEmoji("😄");
+      else setCalculatedEmoji("🤩");
+    }
+
+    const costPerDayValue = (
+      costPerHour *
+      parseFloat(hoursPerDay) *
+      (parseFloat(frequencyValue) /
+        (frequencyUnit === "month" ? 30 : frequencyUnit === "week" ? 7 : 1))
+    ).toFixed(2);
+
+    setTotalHours(totalHoursValue);
+    setCostPerDay(costPerDayValue);
+  };
+
+  const onSubmit = () => {
+    calculateCost();
+  };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setThinkingEmoji((prev) => (prev === "🤔" ? "💭" : "🤔"));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-orange-100 to-green-100 p-4">
@@ -63,114 +165,117 @@ export default function Page() {
           >
             {calculatedEmoji ?? thinkingEmoji}
           </motion.div>
-          <div className="space-y-2">
-            <Label htmlFor="price" className="flex items-center">
-              <ShoppingBagIcon className="mr-2 text-orange-500" />
-              商品の価格（円）
-            </Label>
-            <Input
-              id="price"
-              type="number"
-              placeholder="例: 100000"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              className="border-orange-300 focus:ring-orange-500"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="flex items-center">
-              <CalendarIcon className="mr-2 text-green-500" />
-              使用期間
-            </Label>
-            <div className="flex space-x-2">
-              <Input
-                type="number"
-                value={periodValue}
-                onChange={(e) => setPeriodValue(e.target.value)}
-                className="border-green-300 focus:ring-green-500"
-              />
-              <Select value={periodUnit} onValueChange={setPeriodUnit}>
-                <SelectTrigger className="border-green-300 focus:ring-green-500">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="years">年</SelectItem>
-                  <SelectItem value="months">ヶ月</SelectItem>
-                  <SelectItem value="weeks">週間</SelectItem>
-                  <SelectItem value="days">日</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label className="flex items-center">
-              <CalendarIcon className="mr-2 text-orange-500" />
-              使用頻度
-            </Label>
-            <div className="flex space-x-2">
-              <Input
-                type="number"
-                value={frequencyValue}
-                onChange={(e) => setFrequencyValue(e.target.value)}
-                className="border-orange-300 focus:ring-orange-500"
-              />
-              <Select value={frequencyUnit} onValueChange={setFrequencyUnit}>
-                <SelectTrigger className="border-orange-300 focus:ring-orange-500">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="day">回/日</SelectItem>
-                  <SelectItem value="week">回/週</SelectItem>
-                  <SelectItem value="month">回/月</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          {isDetailMode && (
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="hoursPerDay" className="flex items-center">
-                <ClockIcon className="mr-2 text-green-500" />
-                1回あたりの使用時間（時間）
+              <Label htmlFor="price" className="flex items-center">
+                <ShoppingBagIcon className="mr-2 text-orange-500" />
+                商品の価格（円）
               </Label>
               <Input
-                id="hoursPerDay"
-                type="number"
-                value={hoursPerDay}
-                onChange={(e) => setHoursPerDay(e.target.value)}
-                className="border-green-300 focus:ring-green-500"
+                id="price"
+                type="text"
+                placeholder="例: 100000"
+                {...register("price")}
+                className="border-orange-300"
               />
+              <ErrorMessage errors={errors} name="price" />
             </div>
-          )}
-          <div className="space-y-2">
-            <Label htmlFor="users" className="flex items-center">
-              <UsersIcon className="mr-2 text-orange-500" />
-              使用する人数
-            </Label>
-            <Input
-              id="users"
-              type="number"
-              placeholder="例: 1"
-              value={users}
-              onChange={(e) => setUsers(e.target.value)}
-              className="border-orange-300 focus:ring-orange-500"
-            />
-          </div>
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="detail-mode"
-              checked={isDetailMode}
-              onCheckedChange={setIsDetailMode}
-            />
-            <Label htmlFor="detail-mode">詳細モード</Label>
-          </div>
-          <Button
-            onClick={calculateCost}
-            className="w-full transform rounded-full bg-gradient-to-r from-orange-500 to-green-500 py-3 font-bold text-white transition-all duration-300 hover:scale-105 hover:from-orange-600 hover:to-green-600"
-          >
-            計算したろか！
-          </Button>
+            <div className="space-y-2">
+              <Label className="flex items-center">
+                <CalendarIcon className="mr-2 text-green-500" />
+                使用期間
+              </Label>
+              <div className="flex space-x-2">
+                <Input
+                  type="text"
+                  {...register("periodValue")}
+                  className="border-green-300"
+                />
+                <Select value={periodUnit} onValueChange={setPeriodUnit}>
+                  <SelectTrigger className="border-green-300 focus:ring-green-500">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="years">年</SelectItem>
+                    <SelectItem value="months">ヶ月</SelectItem>
+                    <SelectItem value="weeks">週間</SelectItem>
+                    <SelectItem value="days">日</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <ErrorMessage errors={errors} name="periodValue" />
+            </div>
+            <div className="space-y-2">
+              <Label className="flex items-center">
+                <CalendarIcon className="mr-2 text-orange-500" />
+                使用頻度
+              </Label>
+              <div className="flex space-x-2">
+                <Input
+                  type="text"
+                  {...register("frequencyValue")}
+                  className="border-orange-300"
+                />
+                <Select value={frequencyUnit} onValueChange={setFrequencyUnit}>
+                  <SelectTrigger className="border-orange-300 focus:ring-orange-500">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="day">回/日</SelectItem>
+                    <SelectItem value="week">回/週</SelectItem>
+                    <SelectItem value="month">回/月</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <ErrorMessage errors={errors} name="frequencyValue" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="users" className="flex items-center">
+                <UsersIcon className="mr-2 text-orange-500" />
+                使用する人数
+              </Label>
+              <Input
+                id="users"
+                type="text"
+                placeholder="例: 1"
+                {...register("users")}
+                className="border-orange-300"
+              />
+              <ErrorMessage errors={errors} name="users" />
+            </div>
+            {isDetailMode && (
+              <div className="space-y-2">
+                <Label htmlFor="hoursPerDay" className="flex items-center">
+                  <ClockIcon className="mr-2 text-green-500" />
+                  1回あたりの使用時間（時間）
+                </Label>
+                <Input
+                  id="hoursPerDay"
+                  type="number"
+                  defaultValue="1"
+                  {...register("hoursPerDay")}
+                  className="border-green-300"
+                />
+              </div>
+            )}
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="detail-mode"
+                checked={isDetailMode}
+                onCheckedChange={setIsDetailMode}
+              />
+              <Label htmlFor="detail-mode">詳細モード</Label>
+            </div>
+            <Button
+              type="submit"
+              disabled={!isValid}
+              className="w-full transform rounded-full bg-gradient-to-r from-orange-500 to-green-500 py-3 font-bold text-white transition-all duration-300 hover:scale-105 hover:from-orange-600 hover:to-green-600 disabled:opacity-50"
+            >
+              計算したろか！
+            </Button>
+          </form>
           <AnimatePresence>
-            {result !== null && (
+            {result !== null && !isNaN(result) && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
