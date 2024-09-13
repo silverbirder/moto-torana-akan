@@ -176,7 +176,7 @@ export default function Page() {
                 type="text"
                 placeholder="例: 100000"
                 {...register("price")}
-                className="border-orange-300"
+                className="border-orange-300 focus-visible:ring-orange-500"
               />
               <ErrorMessage errors={errors} name="price" />
             </div>
@@ -189,7 +189,7 @@ export default function Page() {
                 <Input
                   type="text"
                   {...register("periodValue")}
-                  className="border-green-300"
+                  className="border-green-300 focus-visible:ring-green-500"
                 />
                 <Select value={periodUnit} onValueChange={setPeriodUnit}>
                   <SelectTrigger className="border-green-300 focus:ring-green-500">
@@ -214,7 +214,7 @@ export default function Page() {
                 <Input
                   type="text"
                   {...register("frequencyValue")}
-                  className="border-orange-300"
+                  className="border-orange-300 focus-visible:ring-orange-500"
                 />
                 <Select value={frequencyUnit} onValueChange={setFrequencyUnit}>
                   <SelectTrigger className="border-orange-300 focus:ring-orange-500">
@@ -239,7 +239,7 @@ export default function Page() {
                 type="text"
                 placeholder="例: 1"
                 {...register("users")}
-                className="border-orange-300"
+                className="border-orange-300 focus-visible:ring-orange-500"
               />
               <ErrorMessage errors={errors} name="users" />
             </div>
@@ -254,7 +254,7 @@ export default function Page() {
                   type="number"
                   defaultValue="1"
                   {...register("hoursPerDay")}
-                  className="border-green-300"
+                  className="border-green-300 focus-visible:ring-green-500"
                 />
               </div>
             )}
