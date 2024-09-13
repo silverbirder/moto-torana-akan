@@ -25,21 +25,23 @@ export default function RootLayout({
         ></link>
         <link rel="icon" type="image/png" href="/icon-192x192.png"></link>
       </head>
-      <body>
-        <main>{children}</main>
-        <footer className="border-t bg-muted/20 py-4">
-          <div className="flex items-center justify-between px-4 md:px-6">
-            <p className="text-sm text-muted-foreground">
+      <body className="flex min-h-screen flex-col">
+        <main className="flex-grow bg-gradient-to-br from-orange-100 to-green-100">
+          {children}
+        </main>
+        <footer className="bg-gradient-to-r from-orange-500 to-green-500 py-4 text-white shadow-lg">
+          <div className="flex flex-col items-center justify-between space-y-2 px-4 sm:flex-row sm:space-y-0 md:px-6">
+            <p className="text-sm font-medium">
               &copy; 2024 silverbirder. All rights reserved.
             </p>
-            <nav className="flex items-center gap-4">
+            <nav className="flex items-center">
               <Link
                 href="https://forms.gle/zWxurt3y3AHHiw4JA"
-                className="text-sm transition-colors hover:text-primary"
+                className="rounded-full bg-white px-4 py-2 text-sm font-medium text-orange-500 transition-colors hover:bg-orange-100 hover:text-orange-600"
                 target="_blank"
                 prefetch={false}
               >
-                Contact
+                お問い合わせ
               </Link>
             </nav>
           </div>
