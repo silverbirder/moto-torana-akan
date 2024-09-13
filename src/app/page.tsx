@@ -20,6 +20,7 @@ import {
   UsersIcon,
   ClockIcon,
   AlertTriangleIcon,
+  PlusIcon,
 } from "lucide-react";
 import { type FieldErrors, type FieldName, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -92,6 +93,7 @@ const Page = () => {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors, isValid },
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -185,6 +187,14 @@ const Page = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const increasePrice = useCallback(
+    (amount: number) => {
+      const currentPrice = parseInt(price) || 0;
+      setValue("price", (currentPrice + amount).toString());
+    },
+    [price, setValue],
+  );
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-orange-100 to-green-100 p-4">
       <Card className="w-full max-w-md bg-white/80 shadow-lg backdrop-blur-sm">
@@ -214,6 +224,38 @@ const Page = () => {
                 {...register("price")}
                 className="border-orange-300 focus-visible:ring-orange-500"
               />
+              <div className="flex space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => increasePrice(1000)}
+                  className="flex-1 text-xs"
+                >
+                  <PlusIcon className="mr-1 h-3 w-3" />
+                  千円
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => increasePrice(10000)}
+                  className="flex-1 text-xs"
+                >
+                  <PlusIcon className="mr-1 h-3 w-3" />
+                  1万円
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => increasePrice(100000)}
+                  className="flex-1 text-xs"
+                >
+                  <PlusIcon className="mr-1 h-3 w-3" />
+                  10万円
+                </Button>
+              </div>
               <CustomErrorMessage errors={errors} name="price" />
             </div>
             <div className="space-y-2">
