@@ -190,7 +190,9 @@ const Page = () => {
   const increasePrice = useCallback(
     (amount: number) => {
       const currentPrice = parseInt(price) || 0;
-      setValue("price", (currentPrice + amount).toString());
+      setValue("price", (currentPrice + amount).toString(), {
+        shouldValidate: true,
+      });
     },
     [price, setValue],
   );
