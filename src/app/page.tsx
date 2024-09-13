@@ -198,7 +198,7 @@ const Page = () => {
   );
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-orange-100 to-green-100 p-4">
+    <div className="flex items-center justify-center bg-gradient-to-br from-orange-100 to-green-100 p-4">
       <Card className="w-full max-w-md bg-white/80 shadow-lg backdrop-blur-sm">
         <CardHeader className="rounded-t-lg bg-gradient-to-r from-orange-500 to-green-500 text-white">
           <CardTitle className="flex items-center justify-center text-center text-3xl font-bold">
