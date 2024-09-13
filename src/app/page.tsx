@@ -58,7 +58,10 @@ export default function Page() {
   const [calculatedEmoji, setCalculatedEmoji] = useState<string | null>(null);
   const [result, setResult] = useState<number | null>(null);
   const [totalHours, setTotalHours] = useState<string | null>(null);
-  const [costPerDay, setCostPerDay] = useState<string | null>(null);
+  const [costPerDay, setCostPerDay] = useState<{
+    costPerDayValue: string;
+    costPercentage: string;
+  } | null>(null);
 
   const {
     register,
@@ -119,23 +122,28 @@ export default function Page() {
     setResult(costPerHour);
 
     if (!isNaN(costPerHour)) {
-      if (costPerHour > 1000) setCalculatedEmoji("😱");
-      else if (costPerHour > 500) setCalculatedEmoji("😰");
-      else if (costPerHour > 100) setCalculatedEmoji("🤨");
-      else if (costPerHour > 50) setCalculatedEmoji("🙂");
-      else if (costPerHour > 10) setCalculatedEmoji("😄");
+      const costRatio = (costPerHour / parseFloat(price)) * 100;
+
+      if (costRatio > 50) setCalculatedEmoji("😱");
+      else if (costRatio > 25) setCalculatedEmoji("😰");
+      else if (costRatio > 10) setCalculatedEmoji("🤨");
+      else if (costRatio > 5) setCalculatedEmoji("🙂");
+      else if (costRatio > 1) setCalculatedEmoji("😄");
       else setCalculatedEmoji("🤩");
+
+      const costPercentage = costRatio.toFixed(2);
+      setTotalHours(totalHoursValue);
+      const costPerDayValue = (
+        costPerHour *
+        parseFloat(hoursPerDay) *
+        (parseFloat(frequencyValue) /
+          (frequencyUnit === "month" ? 30 : frequencyUnit === "week" ? 7 : 1))
+      ).toFixed(2);
+      setCostPerDay({
+        costPerDayValue: costPerDayValue,
+        costPercentage: costPercentage,
+      });
     }
-
-    const costPerDayValue = (
-      costPerHour *
-      parseFloat(hoursPerDay) *
-      (parseFloat(frequencyValue) /
-        (frequencyUnit === "month" ? 30 : frequencyUnit === "week" ? 7 : 1))
-    ).toFixed(2);
-
-    setTotalHours(totalHoursValue);
-    setCostPerDay(costPerDayValue);
   };
 
   const onSubmit = () => {
@@ -286,19 +294,25 @@ export default function Page() {
                   1時間あたりの使用コスト
                 </p>
                 <p className="bg-gradient-to-r from-orange-500 to-green-500 bg-clip-text text-4xl font-bold text-transparent">
-                  {result.toFixed(2)}円
+                  {result?.toFixed(2)}円
                 </p>
                 <p
                   className="mt-2 text-sm font-medium"
-                  style={{ color: result > 100 ? "#e11d48" : "#059669" }}
+                  style={{
+                    color:
+                      costPerDay && parseFloat(costPerDay.costPercentage) > 25
+                        ? "#e11d48"
+                        : "#059669",
+                  }}
                 >
-                  {result > 100
+                  {costPerDay && parseFloat(costPerDay.costPercentage) > 25
                     ? "もったいない！もっと使わなアカン！"
                     : "ええ感じや！元取れてるで！"}
                 </p>
                 <div className="mt-4 text-xs text-gray-600">
                   <p>総使用時間: {totalHours}時間</p>
-                  <p>1日あたりのコスト: {costPerDay}円</p>
+                  <p>1日あたりのコスト: {costPerDay?.costPerDayValue}円</p>
+                  <p>価格に対するコスト割合: {costPerDay?.costPercentage}%</p>
                 </div>
               </motion.div>
             )}
