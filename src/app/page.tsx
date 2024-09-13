@@ -12,13 +12,11 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { Button } from "~/components/ui/button";
-import { Switch } from "~/components/ui/switch";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ShoppingBagIcon,
   CalendarIcon,
   UsersIcon,
-  ClockIcon,
   AlertTriangleIcon,
   PlusIcon,
 } from "lucide-react";
@@ -44,10 +42,6 @@ const formSchema = z.object({
     .string()
     .min(1, "人数を入力してください 👥")
     .refine((val) => !isNaN(Number(val)), "人数は数値である必要があります 🔢"),
-  hoursPerDay: z
-    .string()
-    .min(1, "時間を入力してください ⏰")
-    .refine((val) => !isNaN(Number(val)), "時間は数値である必要があります 🔢"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -77,13 +71,11 @@ const CustomErrorMessage = ({
 );
 
 const Page = () => {
-  const [isDetailMode, setIsDetailMode] = useState(false);
   const [periodUnit, setPeriodUnit] = useState("months");
   const [frequencyUnit, setFrequencyUnit] = useState("week");
   const [thinkingEmoji, setThinkingEmoji] = useState("🤔");
   const [calculatedEmoji, setCalculatedEmoji] = useState<string | null>(null);
   const [result, setResult] = useState<number | null>(null);
-  const [totalHours, setTotalHours] = useState<string | null>(null);
   const [costPerDay, setCostPerDay] = useState<{
     costPerDayValue: string;
     costPercentage: string;
@@ -98,16 +90,12 @@ const Page = () => {
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     mode: "onChange",
-    defaultValues: {
-      hoursPerDay: "1",
-    },
   });
 
   const price = watch("price");
   const periodValue = watch("periodValue");
   const frequencyValue = watch("frequencyValue");
   const users = watch("users", "1");
-  const hoursPerDay = watch("hoursPerDay", "1");
 
   const getPeriodInDays = useCallback(() => {
     const value = parseFloat(periodValue);
@@ -134,17 +122,13 @@ const Page = () => {
   const calculateCost = useCallback(() => {
     const totalDays = getPeriodInDays();
     const totalUses = getTotalUses(totalDays ?? 0);
-    const totalHoursValue = (
-      (totalUses ?? 0) * parseFloat(hoursPerDay)
-    ).toFixed(1);
 
-    const costPerHour =
-      parseInt(price) / (parseFloat(totalHoursValue) * parseFloat(users));
+    const costPerUse = parseInt(price) / ((totalUses ?? 0) * parseFloat(users));
 
-    setResult(costPerHour);
+    setResult(costPerUse);
 
-    if (!isNaN(costPerHour)) {
-      const costRatio = (costPerHour / parseFloat(price)) * 100;
+    if (!isNaN(costPerUse)) {
+      const costRatio = (costPerUse / parseFloat(price)) * 100;
 
       if (costRatio > 50) setCalculatedEmoji("😱");
       else if (costRatio > 25) setCalculatedEmoji("😰");
@@ -154,27 +138,13 @@ const Page = () => {
       else setCalculatedEmoji("🤩");
 
       const costPercentage = costRatio.toFixed(2);
-      setTotalHours(totalHoursValue);
-      const costPerDayValue = (
-        costPerHour *
-        parseFloat(hoursPerDay) *
-        (parseFloat(frequencyValue) /
-          (frequencyUnit === "month" ? 30 : frequencyUnit === "week" ? 7 : 1))
-      ).toFixed(2);
+      const costPerDayValue = costPerUse.toFixed(2);
       setCostPerDay({
         costPerDayValue: costPerDayValue,
         costPercentage: costPercentage,
       });
     }
-  }, [
-    getPeriodInDays,
-    getTotalUses,
-    hoursPerDay,
-    price,
-    users,
-    frequencyValue,
-    frequencyUnit,
-  ]);
+  }, [getPeriodInDays, getTotalUses, price, users]);
 
   const onSubmit = useCallback(() => {
     calculateCost();
@@ -221,7 +191,7 @@ const Page = () => {
               </Label>
               <Input
                 id="price"
-                type="number"
+                type="text"
                 placeholder="例: 100000"
                 {...register("price")}
                 className="border-orange-300 focus-visible:ring-orange-500"
@@ -267,7 +237,8 @@ const Page = () => {
               </Label>
               <div className="flex space-x-2">
                 <Input
-                  type="number"
+                  type="text"
+                  placeholder="例: 1"
                   {...register("periodValue")}
                   className="border-green-300 focus-visible:ring-green-500"
                 />
@@ -292,7 +263,8 @@ const Page = () => {
               </Label>
               <div className="flex space-x-2">
                 <Input
-                  type="number"
+                  type="text"
+                  placeholder="例: 1"
                   {...register("frequencyValue")}
                   className="border-orange-300 focus-visible:ring-orange-500"
                 />
@@ -316,36 +288,12 @@ const Page = () => {
               </Label>
               <Input
                 id="users"
-                type="number"
+                type="text"
                 placeholder="例: 1"
                 {...register("users")}
                 className="border-orange-300 focus-visible:ring-orange-500"
               />
               <CustomErrorMessage errors={errors} name="users" />
-            </div>
-            {isDetailMode && (
-              <div className="space-y-2">
-                <Label htmlFor="hoursPerDay" className="flex items-center">
-                  <ClockIcon className="mr-2 text-green-500" />
-                  1回あたりの使用時間（時間）
-                </Label>
-                <Input
-                  id="hoursPerDay"
-                  type="number"
-                  defaultValue="1"
-                  {...register("hoursPerDay")}
-                  className="border-green-300 focus-visible:ring-green-500"
-                />
-                <CustomErrorMessage errors={errors} name="hoursPerDay" />
-              </div>
-            )}
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="detail-mode"
-                checked={isDetailMode}
-                onCheckedChange={setIsDetailMode}
-              />
-              <Label htmlFor="detail-mode">詳細モード</Label>
             </div>
             <Button
               type="submit"
@@ -364,7 +312,7 @@ const Page = () => {
                 className="mt-4 rounded-lg bg-white/50 p-4 text-center shadow-inner backdrop-blur-sm"
               >
                 <p className="text-lg font-semibold text-gray-800">
-                  1時間あたりの使用コスト
+                  1日あたりの使用コスト
                 </p>
                 <p className="bg-gradient-to-r from-orange-500 to-green-500 bg-clip-text text-4xl font-bold text-transparent">
                   {result?.toFixed(2)}円
@@ -383,8 +331,6 @@ const Page = () => {
                     : "ええ感じや！元取れてるで！ 😄"}
                 </p>
                 <div className="mt-4 text-xs text-gray-600">
-                  <p>総使用時間: {totalHours}時間 ⏱️</p>
-                  <p>1日あたりのコスト: {costPerDay?.costPerDayValue}円 💰</p>
                   <p>
                     価格に対するコスト割合: {costPerDay?.costPercentage}% 📊
                   </p>
