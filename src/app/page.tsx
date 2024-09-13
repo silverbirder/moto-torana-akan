@@ -1,5 +1,6 @@
 "use client";
 
+import { memo, useCallback, useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
@@ -23,7 +24,6 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ErrorMessage } from "@hookform/error-message";
-import { useCallback, useEffect, useState } from "react";
 
 const formSchema = z.object({
   price: z
@@ -50,7 +50,7 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export default function Page() {
+const Page = () => {
   const [isDetailMode, setIsDetailMode] = useState(false);
   const [periodUnit, setPeriodUnit] = useState("months");
   const [frequencyUnit, setFrequencyUnit] = useState("week");
@@ -84,37 +84,32 @@ export default function Page() {
 
   const getPeriodInDays = useCallback(() => {
     const value = parseFloat(periodValue);
-    switch (periodUnit) {
-      case "years":
-        return value * 365;
-      case "months":
-        return value * 30;
-      case "weeks":
-        return value * 7;
-      default:
-        return value;
-    }
+    return {
+      years: value * 365,
+      months: value * 30,
+      weeks: value * 7,
+      days: value,
+    }[periodUnit];
   }, [periodValue, periodUnit]);
 
   const getTotalUses = useCallback(
     (totalDays: number) => {
       const value = parseFloat(frequencyValue);
-      switch (frequencyUnit) {
-        case "month":
-          return (totalDays / 30) * value;
-        case "week":
-          return (totalDays / 7) * value;
-        default:
-          return totalDays * value;
-      }
+      return {
+        month: (totalDays / 30) * value,
+        week: (totalDays / 7) * value,
+        day: totalDays * value,
+      }[frequencyUnit];
     },
     [frequencyValue, frequencyUnit],
   );
 
-  const calculateCost = () => {
+  const calculateCost = useCallback(() => {
     const totalDays = getPeriodInDays();
-    const totalUses = getTotalUses(totalDays);
-    const totalHoursValue = (totalUses * parseFloat(hoursPerDay)).toFixed(1);
+    const totalUses = getTotalUses(totalDays ?? 0);
+    const totalHoursValue = (
+      (totalUses ?? 0) * parseFloat(hoursPerDay)
+    ).toFixed(1);
 
     const costPerHour =
       parseInt(price) / (parseFloat(totalHoursValue) * parseFloat(users));
@@ -144,11 +139,19 @@ export default function Page() {
         costPercentage: costPercentage,
       });
     }
-  };
+  }, [
+    getPeriodInDays,
+    getTotalUses,
+    hoursPerDay,
+    price,
+    users,
+    frequencyValue,
+    frequencyUnit,
+  ]);
 
-  const onSubmit = () => {
+  const onSubmit = useCallback(() => {
     calculateCost();
-  };
+  }, [calculateCost]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -321,4 +324,6 @@ export default function Page() {
       </Card>
     </div>
   );
-}
+};
+
+export default memo(Page);
