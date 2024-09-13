@@ -1,5 +1,6 @@
 import "~/styles/globals.css";
 
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { GeistSans } from "geist/font/sans";
 import { type Metadata } from "next";
 
@@ -22,7 +23,12 @@ export default function RootLayout({
         ></link>
         <link rel="icon" type="image/png" href="/icon-192x192.png"></link>
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        {process.env.NEXT_PUBLIC_GA_ID && (
+          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
+        )}
+      </body>
     </html>
   );
 }
