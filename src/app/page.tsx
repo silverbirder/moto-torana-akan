@@ -19,8 +19,9 @@ import {
   CalendarIcon,
   UsersIcon,
   ClockIcon,
+  AlertTriangleIcon,
 } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { type FieldErrors, type FieldName, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ErrorMessage } from "@hookform/error-message";
@@ -28,27 +29,51 @@ import { ErrorMessage } from "@hookform/error-message";
 const formSchema = z.object({
   price: z
     .string()
-    .min(1, "価格を入力してください")
-    .refine((val) => !isNaN(Number(val)), "価格は数値である必要があります"),
+    .min(1, "価格を入力してください 💰")
+    .refine((val) => !isNaN(Number(val)), "価格は数値である必要があります 🔢"),
   periodValue: z
     .string()
-    .min(1, "期間を入力してください")
-    .refine((val) => !isNaN(Number(val)), "期間は数値である必要があります"),
+    .min(1, "期間を入力してください ⏳")
+    .refine((val) => !isNaN(Number(val)), "期間は数値である必要があります 🔢"),
   frequencyValue: z
     .string()
-    .min(1, "頻度を入力してください")
-    .refine((val) => !isNaN(Number(val)), "頻度は数値である必要があります"),
+    .min(1, "頻度を入力してください 🔄")
+    .refine((val) => !isNaN(Number(val)), "頻度は数値である必要があります 🔢"),
   users: z
     .string()
-    .min(1, "人数を入力してください")
-    .refine((val) => !isNaN(Number(val)), "人数は数値である必要があります"),
+    .min(1, "人数を入力してください 👥")
+    .refine((val) => !isNaN(Number(val)), "人数は数値である必要があります 🔢"),
   hoursPerDay: z
     .string()
-    .min(1, "時間を入力してください")
-    .refine((val) => !isNaN(Number(val)), "時間は数値である必要があります"),
+    .min(1, "時間を入力してください ⏰")
+    .refine((val) => !isNaN(Number(val)), "時間は数値である必要があります 🔢"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
+
+const CustomErrorMessage = ({
+  errors,
+  name,
+}: {
+  errors: FieldErrors<FormValues>;
+  name: FieldName<FormValues>;
+}) => (
+  <ErrorMessage
+    errors={errors}
+    name={name}
+    render={({ message }) => (
+      <motion.p
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        className="mt-1 flex items-center text-sm font-medium text-red-500"
+      >
+        <AlertTriangleIcon className="mr-1 h-4 w-4" />
+        {message}
+      </motion.p>
+    )}
+  />
+);
 
 const Page = () => {
   const [isDetailMode, setIsDetailMode] = useState(false);
@@ -189,7 +214,7 @@ const Page = () => {
                 {...register("price")}
                 className="border-orange-300 focus-visible:ring-orange-500"
               />
-              <ErrorMessage errors={errors} name="price" />
+              <CustomErrorMessage errors={errors} name="price" />
             </div>
             <div className="space-y-2">
               <Label className="flex items-center">
@@ -214,7 +239,7 @@ const Page = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <ErrorMessage errors={errors} name="periodValue" />
+              <CustomErrorMessage errors={errors} name="periodValue" />
             </div>
             <div className="space-y-2">
               <Label className="flex items-center">
@@ -238,7 +263,7 @@ const Page = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <ErrorMessage errors={errors} name="frequencyValue" />
+              <CustomErrorMessage errors={errors} name="frequencyValue" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="users" className="flex items-center">
@@ -252,7 +277,7 @@ const Page = () => {
                 {...register("users")}
                 className="border-orange-300 focus-visible:ring-orange-500"
               />
-              <ErrorMessage errors={errors} name="users" />
+              <CustomErrorMessage errors={errors} name="users" />
             </div>
             {isDetailMode && (
               <div className="space-y-2">
@@ -267,6 +292,7 @@ const Page = () => {
                   {...register("hoursPerDay")}
                   className="border-green-300 focus-visible:ring-green-500"
                 />
+                <CustomErrorMessage errors={errors} name="hoursPerDay" />
               </div>
             )}
             <div className="flex items-center space-x-2">
@@ -309,13 +335,15 @@ const Page = () => {
                   }}
                 >
                   {costPerDay && parseFloat(costPerDay.costPercentage) > 25
-                    ? "もったいない！もっと使わなアカン！"
-                    : "ええ感じや！元取れてるで！"}
+                    ? "もったいない！もっと使わなアカン！ 😱"
+                    : "ええ感じや！元取れてるで！ 😄"}
                 </p>
                 <div className="mt-4 text-xs text-gray-600">
-                  <p>総使用時間: {totalHours}時間</p>
-                  <p>1日あたりのコスト: {costPerDay?.costPerDayValue}円</p>
-                  <p>価格に対するコスト割合: {costPerDay?.costPercentage}%</p>
+                  <p>総使用時間: {totalHours}時間 ⏱️</p>
+                  <p>1日あたりのコスト: {costPerDay?.costPerDayValue}円 💰</p>
+                  <p>
+                    価格に対するコスト割合: {costPerDay?.costPercentage}% 📊
+                  </p>
                 </div>
               </motion.div>
             )}
