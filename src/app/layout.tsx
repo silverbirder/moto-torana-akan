@@ -7,9 +7,13 @@ import { type Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
+  robots: {
+    index: true,
+  },
   title: "元とらなアカン",
   description: "元とらなもったいないやん！",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
+  keywords: ["元とらなアカン", "値段計算"],
 };
 
 export default function RootLayout({
