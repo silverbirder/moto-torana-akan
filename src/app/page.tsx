@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
@@ -24,6 +24,7 @@ import { type FieldErrors, type FieldName, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ErrorMessage } from "@hookform/error-message";
+import confetti from "canvas-confetti";
 
 const formSchema = z.object({
   price: z
@@ -80,6 +81,8 @@ const Page = () => {
     costPerDayValue: string;
     costPercentage: string;
   } | null>(null);
+  const [isCalculating, setIsCalculating] = useState(false);
+  const calculationRef = useRef<HTMLDivElement>(null);
 
   const {
     register,
@@ -146,10 +149,6 @@ const Page = () => {
     }
   }, [getPeriodInDays, getTotalUses, price, users]);
 
-  const onSubmit = useCallback(() => {
-    calculateCost();
-  }, [calculateCost]);
-
   useEffect(() => {
     const interval = setInterval(() => {
       setThinkingEmoji((prev) => (prev === "🤔" ? "💭" : "🤔"));
@@ -166,6 +165,22 @@ const Page = () => {
     },
     [price, setValue],
   );
+
+  const onSubmit = useCallback(() => {
+    setIsCalculating(true);
+    setTimeout(() => {
+      calculateCost();
+      setIsCalculating(false);
+      if (calculationRef.current) {
+        calculationRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+      void confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+      });
+    }, 2000);
+  }, [calculateCost]);
 
   return (
     <div className="flex items-center justify-center p-4">
@@ -297,28 +312,58 @@ const Page = () => {
             </div>
             <Button
               type="submit"
-              disabled={!isValid}
-              className="w-full transform rounded-full bg-gradient-to-r from-orange-500 to-green-500 py-3 font-bold text-white transition-all duration-300 hover:scale-105 hover:from-orange-600 hover:to-green-600 disabled:opacity-50"
+              disabled={!isValid || isCalculating}
+              className="relative w-full transform overflow-hidden rounded-full bg-gradient-to-r from-orange-500 to-green-500 py-3 font-bold text-white transition-all duration-300 hover:scale-105 hover:from-orange-600 hover:to-green-600 disabled:opacity-50"
             >
-              計算したろか！
+              {isCalculating ? (
+                <motion.div
+                  className="absolute inset-0 flex items-center justify-center bg-gradient-to-r from-purple-500 to-pink-500"
+                  initial={{ x: "-100%" }}
+                  animate={{ x: "100%" }}
+                  transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                />
+              ) : null}
+              <span className="relative z-10">
+                {isCalculating ? "計算中..." : "計算したろか！"}
+              </span>
             </Button>
           </form>
           <AnimatePresence>
             {result !== null && !isNaN(result) && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
+                ref={calculationRef}
+                initial={{ opacity: 0, y: 20, scale: 0.8 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.8 }}
+                transition={{ type: "spring", damping: 15, stiffness: 300 }}
                 className="mt-4 rounded-lg bg-white/50 p-4 text-center shadow-inner backdrop-blur-sm"
               >
-                <p className="text-lg font-semibold text-gray-800">
+                <motion.p
+                  className="text-lg font-semibold text-gray-800"
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                >
                   1日あたりの使用コスト
-                </p>
-                <p className="bg-gradient-to-r from-orange-500 to-green-500 bg-clip-text text-4xl font-bold text-transparent">
+                </motion.p>
+                <motion.p
+                  className="bg-gradient-to-r from-orange-500 to-green-500 bg-clip-text text-4xl font-bold text-transparent"
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{
+                    type: "spring",
+                    damping: 10,
+                    stiffness: 100,
+                    delay: 0.4,
+                  }}
+                >
                   {result?.toFixed(2)}円
-                </p>
-                <p
+                </motion.p>
+                <motion.p
                   className="mt-2 text-sm font-medium"
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.6 }}
                   style={{
                     color:
                       costPerDay && parseFloat(costPerDay.costPercentage) > 25
@@ -329,12 +374,17 @@ const Page = () => {
                   {costPerDay && parseFloat(costPerDay.costPercentage) > 25
                     ? "もったいない！もっと使わなアカン！ 😱"
                     : "ええ感じや！元取れてるで！ 😄"}
-                </p>
-                <div className="mt-4 text-xs text-gray-600">
+                </motion.p>
+                <motion.div
+                  className="mt-4 text-xs text-gray-600"
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.8 }}
+                >
                   <p>
                     価格に対するコスト割合: {costPerDay?.costPercentage}% 📊
                   </p>
-                </div>
+                </motion.div>
               </motion.div>
             )}
           </AnimatePresence>
