@@ -209,7 +209,7 @@ const Page = () => {
               </Label>
               <Input
                 id="price"
-                type="text"
+                type="number"
                 placeholder="例: 100000"
                 {...register("price")}
                 className="border-orange-300 focus-visible:ring-orange-500"
@@ -223,7 +223,7 @@ const Page = () => {
               </Label>
               <div className="flex space-x-2">
                 <Input
-                  type="text"
+                  type="number"
                   {...register("periodValue")}
                   className="border-green-300 focus-visible:ring-green-500"
                 />
@@ -248,7 +248,7 @@ const Page = () => {
               </Label>
               <div className="flex space-x-2">
                 <Input
-                  type="text"
+                  type="number"
                   {...register("frequencyValue")}
                   className="border-orange-300 focus-visible:ring-orange-500"
                 />
@@ -272,7 +272,7 @@ const Page = () => {
               </Label>
               <Input
                 id="users"
-                type="text"
+                type="number"
                 placeholder="例: 1"
                 {...register("users")}
                 className="border-orange-300 focus-visible:ring-orange-500"
