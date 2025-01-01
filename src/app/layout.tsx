@@ -36,7 +36,8 @@ export default function RootLayout({
         <footer className="bg-gradient-to-r from-orange-500 to-green-500 py-4 text-white shadow-lg">
           <div className="flex flex-col items-center justify-between space-y-2 px-4 sm:flex-row sm:space-y-0 md:px-6">
             <p className="text-sm font-medium">
-              &copy; 2024 silverbirder. All rights reserved.
+              &copy; {new Date().getFullYear()} silverbirder. All rights
+              reserved.
             </p>
             <nav className="flex items-center">
               <Link
