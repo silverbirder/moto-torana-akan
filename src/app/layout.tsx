@@ -39,7 +39,7 @@ export default function RootLayout({
               &copy; {new Date().getFullYear()} silverbirder. All rights
               reserved.
             </p>
-            <nav className="flex items-center">
+            <nav className="flex items-center gap-2">
               <Link
                 href="https://forms.gle/zWxurt3y3AHHiw4JA"
                 className="rounded-full bg-white px-4 py-2 text-sm font-medium text-orange-500 transition-colors hover:bg-orange-100 hover:text-orange-600"
@@ -47,6 +47,14 @@ export default function RootLayout({
                 prefetch={false}
               >
                 お問い合わせ
+              </Link>
+              <Link
+                href="https://sites.google.com/view/silverbirders-services"
+                className="rounded-full bg-white px-4 py-2 text-sm font-medium text-orange-500 transition-colors hover:bg-orange-100 hover:text-orange-600"
+                target="_blank"
+                prefetch={false}
+              >
+                関連サービス
               </Link>
             </nav>
           </div>
